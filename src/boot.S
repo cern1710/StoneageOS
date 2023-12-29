@@ -39,8 +39,7 @@ boot:
 
 start:
 
-    ; In real hardware the BIOS puts the address of the booting drive on the dl register
-    ; so I am writing that addres into memory at [bootdrv]
+    ; The BIOS writes the  booting drive address on the dl register
     mov [bootdrv], dl
 
     mov ax, 07c0h

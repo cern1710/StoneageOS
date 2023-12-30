@@ -1,5 +1,5 @@
 ; Start memory at 0x7c00 for bootloading of PC BIOS
-[ORG 7c00h]
+[ORG 0x7c00]
 
 ; Source: https://github.com/pablojimenezmateo/curriculum-bootloader
 ; Changes have been made for this kernel
@@ -38,15 +38,43 @@ boot:
     dw 0xffff, 0xffff, 0xffff, 0xffff
 
 start:
+    cli                ; Disable interrupts
+    xor ax, ax         ; Clear AX register
+    mov ds, ax         ; Init data segment -> 0
+    mov es, ax         ; Init extra segment -> 0
+    mov ss, ax         ; Init stack segment -> 0
+    mov sp, 0x7c00     ; Set stack ptr to 0x7c00
+    sti                ; Enable interrupts
 
-    ; The BIOS writes the  booting drive address on the dl register
-    mov [bootdrv], dl
+    cld                ; Clear direction flag
+    mov si, msg        ; Load message addr into SI
+    call bios_puts
+    hlt                ; Halt the CPU
 
-    mov ax, 07c0h
-    shr ax, 4               ; Set offset with shr instead of adding 288
-    mov ss, ax              ; ss = stack space
-    mov sp, 4096            ; sp = stack pointer
 
-    mov ax, 07c0h           ; ds = data segment
-    shr ax, 4
-    mov ds, ax
+; BIOS Routine to print a character
+bios_putc:
+    mov ah, 0x0E       ; BIOS teletype function
+    mov bh, 0x00       ; Page number
+    int 0x10           ; Call BIOS interrupt
+    ret
+
+
+; BIOS Routine to print a string at DS:SI
+bios_puts:
+    pusha              ; Push all general-purpose registers
+.loop:
+    lodsb              ; Load byte at DS:SI into AL and increment SI
+    test al, al        ; Test if AL = zero (end of string)
+    jz .done           ; Exit if we've reached end of string
+    call bios_putc     ; Print character in AL
+    jmp .loop
+.done:
+    popa               ; Restore all general-purpose registers
+    ret
+
+msg db "Welcome to StoneageOS!", 13, 10, 0
+bootdrv db 0                        ; Boot drive number
+
+times 510-($-$$) db 0               ; Pad remaining boot sector with 0s
+dw 0xaa55                           ; Boot sector signature

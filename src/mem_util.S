@@ -13,11 +13,9 @@ memset:
     test bx, 1          ; Check if original len was odd
     jz .end             ; Return if original len is even
     stosb               ; Store remaining byte
-
 .end:
     popa                ; Restore all general-purpose reg
     ret
-
 
 ; Params:
 ;    si: Src addr
@@ -35,13 +33,10 @@ memmove:
     rep movsb           ; Move bytes from src to dest backwards
     cld                 ; Clear direction flag (reset to default forward movement)
     jmp .end            ; Jump to end to avoid forward movement code
-
 .forward:
     rep movsb           ; Move bytes from src to dest forward
-
 .end:
     popa
-
 
 ; Params:
 ;    si: First memory block addr

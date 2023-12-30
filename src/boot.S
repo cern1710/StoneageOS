@@ -7,7 +7,6 @@
 bits 16
 
 boot:
-
     ; This is a BPB, so that the BIOS does not overwrite our code
     ; https://stackoverflow.com/questions/47277702/custom-bootloader-booted-via-usb-drive-produces-incorrect-output-on-some-compute
     jmp start
@@ -47,10 +46,34 @@ start:
     sti                ; Enable interrupts
 
     cld                ; Clear direction flag
-    mov si, msg        ; Load message addr into SI
+    mov si, msg
     call bios_puts
-    hlt                ; Halt the CPU
+    mov si, load_msg
+    call bios_puts
 
+    mov cx, 4          ; Number of sectors to read
+    mov dl, [bootdrv]
+    call read_sectors
+
+    jnc .success       ; Jump if no error
+    mov si, error_msg
+    call bios_puts
+    jmp $              ; Infinite loop on error
+.success:
+    mov si, success_msg
+    call bios_puts
+    ; jmp
+
+; BIOS Routine to read sector
+read_sectors:
+    mov ah, 0x02
+    mov al, cl        ; Sectors to read
+    mov ch, 0         ; Cylinder number
+    mov cl, 2         ; Read from 2nd sector
+    xor dh, dh        ; Head number
+    mov bx, 0x1000    ; Buffer addr (ES:BX)
+    int 0x13          ; BIOS disk interrupt
+    ret
 
 ; BIOS Routine to print a character
 bios_putc:
@@ -58,7 +81,6 @@ bios_putc:
     mov bh, 0x00       ; Page number
     int 0x10           ; Call BIOS interrupt
     ret
-
 
 ; BIOS Routine to print a string at DS:SI
 bios_puts:
@@ -74,7 +96,10 @@ bios_puts:
     ret
 
 msg db "Welcome to StoneageOS!", 13, 10, 0
-bootdrv db 0                        ; Boot drive number
+load_msg db "Loading...", 13, 10, 0
+success_msg db "Load successful!", 13, 10, 0
+error_msg db "Error loading!", 13, 10, 0
 
+bootdrv db 0                        ; Boot drive number
 times 510-($-$$) db 0               ; Pad remaining boot sector with 0s
 dw 0xaa55                           ; Boot sector signature

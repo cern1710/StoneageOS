@@ -69,7 +69,7 @@ start:
 
 .load_success:
     mov si, success_msg
-    call bios_puts
+    call boot_print
     mov ax, 0x1000      ; Set AX to segment addr for kernel
     mov ds, ax
     mov es, ax
@@ -77,24 +77,20 @@ start:
 
 .load_error:
     mov si, error_msg
-    call bios_puts
+    call boot_print
     jmp $
 
-; BIOS Routine to print a character
-bios_putc:
-    mov ah, 0x0E        ; BIOS teletype function
-    mov bh, 0x00        ; Page number
-    int 0x10            ; Call BIOS interrupt
-    ret
-
 ; BIOS Routine to print a string at DS:SI
-bios_puts:
+; Only used in the bootloader!
+boot_print:
     pusha               ; Push all general-purpose registers
 .loop:
     lodsb               ; Load byte at DS:SI into AL and increment SI
     test al, al         ; Test if AL = zero (end of string)
     jz .done            ; Exit if we've reached end of string
-    call bios_putc      ; Print character in AL
+    mov ah, 0x0E        ; BIOS teletype function
+    mov bh, 0x00        ; Page number
+    int 0x10            ; Call BIOS interrupt
     jmp .loop
 .done:
     popa                ; Restore all general-purpose registers

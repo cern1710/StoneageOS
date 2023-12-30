@@ -13,8 +13,10 @@ $(OUT_DIR):
 
 build: $(OUT_DIR)
 	$(ASM) src/boot.s -o $(OUT_DIR)/boot.bin
+	$(ASM) src/kernel.s -o $(OUT_DIR)/kernel.bin -i src/
 	dd if=/dev/zero of=$(OUT_DIR)/stoneageos.img bs=1024 count=1440
 	dd if=$(OUT_DIR)/boot.bin of=$(OUT_DIR)/stoneageos.img conv=notrunc
+	dd if=$(OUT_DIR)/kernel.bin of=$(OUT_DIR)/stoneageos.img bs=512 seek=1 conv=notrunc
 
 run:
 	$(QEMU) -drive format=raw,file=$(OUT_DIR)/stoneageos.img -monitor stdio -serial file:$(OUT_DIR)/log

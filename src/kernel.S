@@ -78,10 +78,13 @@ crlf db 13, 10, 0
 prompt_char equ '>'
 newline_char equ 13
 backspace_char equ 8
+
+; Source: https://qr.ae/pKSazT
 right_arrow equ 0x4800
 left_arrow equ 0x4B00
 up_arrow equ 0x4D00
 down_arrow equ 0x5000
+
 db 0xab, 0xcd
 linebuffer_len equ 78
 linebuffer times linebuffer_len db 0

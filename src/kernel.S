@@ -12,12 +12,16 @@ kernel_start:
 
 .key_loop:
     call get_keystroke      ; Get a keystroke and store it in SI
-
     mov ax, si              ; Move keystroke from SI to AX
-    cmp ax, newline_char    ; Check if it's a newline char
-    je .if_enter_key        ; Jump if it's an enter key press
-    cmp ax, backspace_char  ; Check if it's a backspace char
-    je .if_backspace_key    ; Jump if it's a backspace key press
+
+    cmp ax, left_arrow
+    je .move_cursor_left
+    cmp ax, down_arrow
+    je .move_cursor_left
+    cmp ax, newline_char
+    je .if_enter_key
+    cmp ax, backspace_char
+    je .if_backspace_key
     cmp di, linebuffer_end  ; Check if buffer end is reached
     je .key_loop            ; Stay in loop if end is reached
 
@@ -52,11 +56,21 @@ kernel_start:
 
     jmp .key_loop           ; Jump back to key loop
 
+.move_cursor_left:
+    cmp di, linebuffer      ; Check if at start of buffer
+    je .key_loop            ; If so, do nothing
+    mov al, backspace_char
+    call putc               ; Move cursor back
+    dec di                  ; Decrement DI to move cursor left in the buffer
+    jmp .key_loop           ; Return to the main key loop
+
 welcome_msg db "Welcome to StoneageOS!", 10, 13, 0
 crlf db 13, 10, 0
 prompt_char equ '>'
 newline_char equ 13
 backspace_char equ 8
+left_arrow equ 0x4B00
+down_arrow equ 0x5000
 db 0xab, 0xcd
 linebuffer_len equ 78
 linebuffer times linebuffer_len db 0
